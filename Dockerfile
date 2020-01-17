@@ -10,7 +10,7 @@ RUN git clone -b $SKOPEO_VERSION https://github.com/containers/skopeo.git && \
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as final
 
-LABEL maintainer="Robert Bohne <robert.bohne@redhat.com>"
+LABEL maintainer="Alessandro Rossi <al.rossi87@gmail.com>"
 
 RUN mkdir /etc/containers/
 
