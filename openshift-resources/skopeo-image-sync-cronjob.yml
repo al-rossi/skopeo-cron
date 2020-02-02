@@ -1,0 +1,39 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: skopeo-image-sync
+spec:
+# Format: https://en.wikipedia.org/wiki/Cron
+  schedule: "*/1 * * * *"
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: skopeo-ubi
+              image: docker-registry.default.svc:5000/skopeo-cron/skopeo:latest 
+              command:  
+                - "/bin/sh"
+                - "-c"
+                - |
+                  skopeo copy \
+                  --authfile=/pushsecret/.dockerconfigjson --dest-tls-verify=false \
+                  docker://docker.io/splunk/fluentd-hec:$(FLUENTD-HEC-VERSION) \
+                  docker://docker-registry-default.apps.ocp.lab/skopeo-cron/fluentd-hec:$(FLUENTD-HEC-VERSION)
+              env:
+                - name: FLUENTD-HEC-VERSION
+                  valueFrom:
+                    configMapKeyRef:
+                      name: skopeo-cron-config
+                      key: HEC-VERSION
+              volumeMounts:
+                - mountPath: /pushsecret
+                  name: pushsecret
+                  readOnly: true
+          serviceAccountName: skopeo
+          volumes:
+            - name: pushsecret
+              secret:
+                secretName: dockerauth
